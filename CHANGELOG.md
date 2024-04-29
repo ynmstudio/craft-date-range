@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 5.0.0-beta.2 - 2024-04-29
+### Fixed
+- Fixed an issue where the plugin would only install on 8.2.0 specifically ([#36](https://github.com/studioespresso/craft-date-range/issues/36))
+
 ## 5.0.0-beta.1 - 2024-03-22
 
 > [!WARNING]  
