@@ -47,6 +47,11 @@ class EntriesArguments extends Entry
                 'type' => Type::listOf(Type::string()),
                 'description' => 'Query entries with a date-range starting after given date',
             ],
+            'endsBeforeDate' => [
+                'name' => 'endsBeforeDate',
+                'type' => Type::listOf(Type::string()),
+                'description' => 'Query entries with a date-range ending before given date',
+            ],
         ]);
     }
 }

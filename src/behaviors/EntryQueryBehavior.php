@@ -37,6 +37,8 @@ class EntryQueryBehavior extends Behavior
 
     public $startsAfterDate = null;
 
+    public $endsBeforeDate = null;
+
     public string|null $entryTypeHandle = null;
 
     /**
@@ -104,6 +106,21 @@ class EntryQueryBehavior extends Behavior
 
         $this->handle = $value['handle'];
         $this->startsAfterDate = $value['date'];
+        $this->entryTypeHandle = $value['entryTypeHandle'];
+
+        return $this->owner;
+    }
+
+    public function endsBeforeDate(
+        string|array $value,
+        string|DateTimeInterface|int $date = null,
+        string|bool $entryTypeHandle = null
+    ): Component|null
+    {
+        $value = $this->parseDateArgumentValue($value, $date, $entryTypeHandle);
+
+        $this->handle = $value['handle'];
+        $this->endsBeforeDate = $value['date'];
         $this->entryTypeHandle = $value['entryTypeHandle'];
 
         return $this->owner;
@@ -180,6 +197,17 @@ class EntryQueryBehavior extends Behavior
                     ));
             }
 
+            if ($field && $this->endsBeforeDate
+                && ($date = DateTimeHelper::toDateTime($this->endsBeforeDate))
+            ) {
+                $this->owner->subQuery
+                    ->andWhere(Db::parseDateParam(
+                        '"field_' . $this->handle . $this->columnSuffix . '"::json->>\'end\'',
+                        $date->format('Y-m-d'),
+                        '<'
+                    ));
+            }
+
         }
 
         elseif (Craft::$app->db->getIsMysql())
@@ -236,6 +264,17 @@ class EntryQueryBehavior extends Behavior
                         $field->getValueSql('start'),
                         $date->format('Y-m-d'),
                         '>'
+                    ));
+            }
+
+            if ($field && ($this->endsBeforeDate
+                && $date = DateTimeHelper::toDateTime($this->endsBeforeDate))
+            ) {
+                $this->owner->subQuery
+                    ->andWhere(Db::parseDateParam(
+                        $field->getValueSql('end'),
+                        $date->format('Y-m-d'),
+                        '<'
                     ));
             }
         }

@@ -152,6 +152,13 @@ class DateRangeData extends BaseObject implements Serializable
         return $this->start->format('U') > $date->format('U');
     }
 
+    public function endsBeforeDate( string|DateTimeInterface|int $date ): bool
+    {
+        $date = DateTimeHelper::toDateTime($date);
+
+        return $this->end->format('U') < $date->format('U');
+    }
+
     public static function normalize($value, FieldInterface $config)
     {
         if (!is_array($value)) {
