@@ -5,8 +5,11 @@ namespace studioespresso\daterange\behaviors;
 use Craft;
 use craft\elements\db\ElementQuery;
 use craft\elements\db\EntryQuery;
+use craft\helpers\DateTimeHelper;
 use craft\helpers\Db;
+use DateTimeInterface;
 use yii\base\Behavior;
+use yii\base\Component;
 use yii\base\InvalidConfigException;
 
 /**
@@ -31,6 +34,8 @@ class EntryQueryBehavior extends Behavior
     public $isOnGoing = false;
 
     public $includeToday;
+
+    public $startsAfterDate = null;
 
     public string|null $entryTypeHandle = null;
 
@@ -89,6 +94,20 @@ class EntryQueryBehavior extends Behavior
         return $this->owner;
     }
 
+    public function startsAfterDate(
+        string|array $value,
+        string|DateTimeInterface|int $date = null,
+        string|bool $entryTypeHandle = null
+    ): Component|null
+    {
+        $value = $this->parseDateArgumentValue($value, $date, $entryTypeHandle);
+
+        $this->handle = $value['handle'];
+        $this->startsAfterDate = $value['date'];
+        $this->entryTypeHandle = $value['entryTypeHandle'];
+
+        return $this->owner;
+    }
     public function onAfterPrepare()
     {
         if ($this->handle && !$this->entryTypeHandle) {
@@ -104,7 +123,8 @@ class EntryQueryBehavior extends Behavior
             $this->field = $layout->getFieldByHandle($this->handle);
         }
 
-        if (Craft::$app->db->getIsPgsql()) {
+        if (Craft::$app->db->getIsPgsql())
+        {
             /** @var \craft\base\FieldInterface|null $field */
             $field = $this->field;
             if ($field && $this->isFuture) {
@@ -148,7 +168,22 @@ class EntryQueryBehavior extends Behavior
                         $this->includeToday ? '>=' : '>'
                     ));
             }
-        } elseif (Craft::$app->db->getIsMysql()) {
+
+            if ($field && $$this->startsAfterDate
+                && ($date = DateTimeHelper::toDateTime($this->startsAfterDate))
+            ) {
+                $this->owner->subQuery
+                    ->andWhere(Db::parseDateParam(
+                        '"field_' . $this->handle . $this->columnSuffix . '"::json->>\'start\'',
+                        $date->format('Y-m-d'),
+                        '>'
+                    ));
+            }
+
+        }
+
+        elseif (Craft::$app->db->getIsMysql())
+        {
             /** @var \craft\base\FieldInterface|null $field */
             $field = $this->field;
             if ($field && $this->isFuture) {
@@ -190,6 +225,17 @@ class EntryQueryBehavior extends Behavior
                         $field->getValueSql('end'),
                         date('Y-m-d'),
                         $this->includeToday ? '>=' : '>'
+                    ));
+            }
+
+            if ($field && $this->startsAfterDate
+                && ($date = DateTimeHelper::toDateTime($this->startsAfterDate))
+            ) {
+                $this->owner->subQuery
+                    ->andWhere(Db::parseDateParam(
+                        $field->getValueSql('start'),
+                        $date->format('Y-m-d'),
+                        '>'
                     ));
             }
         }
@@ -220,4 +266,28 @@ class EntryQueryBehavior extends Behavior
             'includeToday' => $includeToday,
         ];
     }
+
+    protected function parseDateArgumentValue(
+        string|array|DateTimeInterface|int $value,
+        string $handle = null,
+        string $entryTypeHandle = null
+    ): array
+    {
+        $date = null;
+
+        if (is_array($value)) {
+            $date = DateTimeHelper::toDateTime($value[0] ?? null);
+            $handle = $value[1] ?? null;
+            $entryTypeHandle = $value[2] ?? null;
+        } else {
+            $date = DateTimeHelper::toDateTime($value);
+        }
+
+        return [
+            'date' => $date,
+            'handle' => $handle,
+            'entryTypeHandle' => $entryTypeHandle,
+        ];
+    }
+
 }

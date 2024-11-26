@@ -42,7 +42,11 @@ class EntriesArguments extends Entry
                 'type' => Type::listOf(QueryArgument::getType()),
                 'description' => 'Query entries where the end date is in the future',
             ],
-
+            'startsAfterDate' => [
+                'name' => 'startsAfterDate',
+                'type' => Type::listOf(Type::string()),
+                'description' => 'Query entries with a date-range starting after given date',
+            ],
         ]);
     }
 }
