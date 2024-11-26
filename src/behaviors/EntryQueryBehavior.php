@@ -43,6 +43,8 @@ class EntryQueryBehavior extends Behavior
 
     public $isDuringDate = null;
 
+    public $isNotDuringDate = null;
+
     public string|null $entryTypeHandle = null;
 
     /**
@@ -144,6 +146,22 @@ class EntryQueryBehavior extends Behavior
 
         return $this->owner;
     }
+
+    public function isNotDuringDate(
+        string|array $value,
+        string|DateTimeInterface|int $date = null,
+        string|bool $entryTypeHandle = null
+    ): Component|null
+    {
+        $value = $this->parseDateRangeArgumentValue($value, $date, $entryTypeHandle);
+
+        $this->handle = $value['handle'];
+        $this->isNotDuringDate = $value['dateRange'];
+        $this->entryTypeHandle = $value['entryTypeHandle'];
+
+        return $this->owner;
+    }
+
     public function onAfterPrepare()
     {
         if ($this->handle && !$this->entryTypeHandle) {
@@ -243,6 +261,24 @@ class EntryQueryBehavior extends Behavior
                     ));
             }
 
+            if ($field && $this->isNotDuringDate
+                && ($dateRange = DateRange::toDateRange($this->isNotDuringDate))
+            ) {
+                $this->owner->subQuery
+                    ->andWhere([
+                        'or',
+                        Db::parseDateParam(
+                            '"field_' . $this->handle . $this->columnSuffix . '"::json->>\'start\'',
+                            $dateRange['end']->format('Y-m-d'),
+                            '>'
+                        ),
+                        Db::parseDateParam(
+                            '"field_' . $this->handle . $this->columnSuffix . '"::json->>\'end\'',
+                            $dateRange['start']->format('Y-m-d'),
+                            '<'
+                        )
+                    ]);
+            }
         }
 
         elseif (Craft::$app->db->getIsMysql())
@@ -327,6 +363,25 @@ class EntryQueryBehavior extends Behavior
                         $dateRange['start']->format('Y-m-d'),
                         '>='
                     ));
+            }
+
+            if ($field && $this->isNotDuringDate
+                && ($dateRange = DateRange::toDateRange($this->isNotDuringDate))
+            ) {
+                $this->owner->subQuery
+                    ->andWhere([
+                        'or',
+                        Db::parseDateParam(
+                            $field->getValueSql('start'),
+                            $dateRange['end']->format('Y-m-d'),
+                            '>'
+                        ),
+                        Db::parseDateParam(
+                            $field->getValueSql('end'),
+                            $dateRange['start']->format('Y-m-d'),
+                            '<'
+                        ),
+                    ]);
             }
         }
     }

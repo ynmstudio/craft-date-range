@@ -114,7 +114,8 @@ class DateRange extends Plugin
             Gql::class,
             Gql::EVENT_REGISTER_GQL_QUERIES,
             function(RegisterGqlQueriesEvent $event) {
-                // Add isFuture, isOngoing, isPast to entry query arguments
+                // Add date-range query arguments `isFuture`, `isOngoing`, `isPast`, `isNotPast`, `isOngoing`,
+                // `startsAfterDate`, `endsBeforeDate`, `isDuringDate`, `isNotDuringDate`
                 $arguments = EntriesArguments::getArguments();
 
                 // Only update the args key
