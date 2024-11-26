@@ -52,6 +52,11 @@ class EntriesArguments extends Entry
                 'type' => Type::listOf(Type::string()),
                 'description' => 'Query entries with a date-range ending before given date',
             ],
+            'isDuringDate' => [
+                'name' => 'isDuringDate',
+                'type' => Type::listOf(Type::string()),
+                'description' => 'Query entries with a date-range which includes given date, or overlaps with given date-range',
+            ],
         ]);
     }
 }

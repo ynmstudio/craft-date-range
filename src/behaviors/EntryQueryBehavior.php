@@ -5,9 +5,11 @@ namespace studioespresso\daterange\behaviors;
 use Craft;
 use craft\elements\db\ElementQuery;
 use craft\elements\db\EntryQuery;
+use craft\helpers\ArrayHelper;
 use craft\helpers\DateTimeHelper;
 use craft\helpers\Db;
 use DateTimeInterface;
+use studioespresso\daterange\DateRange;
 use yii\base\Behavior;
 use yii\base\Component;
 use yii\base\InvalidConfigException;
@@ -38,6 +40,8 @@ class EntryQueryBehavior extends Behavior
     public $startsAfterDate = null;
 
     public $endsBeforeDate = null;
+
+    public $isDuringDate = null;
 
     public string|null $entryTypeHandle = null;
 
@@ -125,6 +129,21 @@ class EntryQueryBehavior extends Behavior
 
         return $this->owner;
     }
+
+    public function isDuringDate(
+        string|array $value,
+        string|DateTimeInterface|int $date = null,
+        string|bool $entryTypeHandle = null
+    ): Component|null
+    {
+        $value = $this->parseDateRangeArgumentValue($value, $date, $entryTypeHandle);
+
+        $this->handle = $value['handle'];
+        $this->isDuringDate = $value['dateRange'];
+        $this->entryTypeHandle = $value['entryTypeHandle'];
+
+        return $this->owner;
+    }
     public function onAfterPrepare()
     {
         if ($this->handle && !$this->entryTypeHandle) {
@@ -208,6 +227,22 @@ class EntryQueryBehavior extends Behavior
                     ));
             }
 
+            if ($field && $this->isDuringDate
+                && ($dateRange = DateRange::toDateRange($this->isDuringDate))
+            ) {
+                $this->owner->subQuery
+                    ->andWhere(Db::parseDateParam(
+                        '"field_' . $this->handle . $this->columnSuffix . '"::json->>\'start\'',
+                        $dateRange['end']->format('Y-m-d'),
+                        '<='
+                    ))
+                    ->andWhere(Db::parseDateParam(
+                        '"field_' . $this->handle . $this->columnSuffix . '"::json->>\'end\'',
+                        $dateRange['start']->format('Y-m-d'),
+                        '>='
+                    ));
+            }
+
         }
 
         elseif (Craft::$app->db->getIsMysql())
@@ -277,6 +312,22 @@ class EntryQueryBehavior extends Behavior
                         '<'
                     ));
             }
+
+            if ($field && $this->isDuringDate
+                && ($dateRange = DateRange::toDateRange($this->isDuringDate))
+            ) {
+                $this->owner->subQuery
+                    ->andWhere(Db::parseDateParam(
+                        $field->getValueSql('start'),
+                        $dateRange['end']->format('Y-m-d'),
+                        '<='
+                    ))
+                    ->andWhere(Db::parseDateParam(
+                        $field->getValueSql('end'),
+                        $dateRange['start']->format('Y-m-d'),
+                        '>='
+                    ));
+            }
         }
     }
 
@@ -324,6 +375,30 @@ class EntryQueryBehavior extends Behavior
 
         return [
             'date' => $date,
+            'handle' => $handle,
+            'entryTypeHandle' => $entryTypeHandle,
+        ];
+    }
+
+    protected function parseDateRangeArgumentValue(
+        string|array|DateTimeInterface|int $value,
+        string $handle = null,
+        string $entryTypeHandle = null
+    ): array
+    {
+        $dateRange = null;
+
+        if (is_array($value) && ArrayHelper::isIndexed($value))
+        {
+            $dateRange = DateRange::toDateRange($value[0] ?? null);
+            $handle = $value[1] ?? null;
+            $entryTypeHandle = $value[2] ?? null;
+        } else {
+            $dateRange = DateRange::toDateRange($value);
+        }
+
+        return [
+            'dateRange' => $dateRange,
             'handle' => $handle,
             'entryTypeHandle' => $entryTypeHandle,
         ];

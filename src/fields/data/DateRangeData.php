@@ -159,6 +159,16 @@ class DateRangeData extends BaseObject implements Serializable
         return $this->end->format('U') < $date->format('U');
     }
 
+    public function isDuringDate( string|array|DateTimeInterface|int $date ): bool
+    {
+        $dateRange = DateRange::toDateRange($date);
+
+        return (
+            $this->start->format('U') <= $dateRange['end']->format('U')
+            && $this->end->format('U') >= $dateRange['start']->format('U')
+        );
+    }
+
     public static function normalize($value, FieldInterface $config)
     {
         if (!is_array($value)) {

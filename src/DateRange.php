@@ -16,8 +16,10 @@ use craft\elements\db\EntryQuery;
 use craft\events\DefineBehaviorsEvent;
 use craft\events\RegisterComponentTypesEvent;
 use craft\events\RegisterGqlQueriesEvent;
+use craft\helpers\DateTimeHelper;
 use craft\services\Fields;
 use craft\services\Gql;
+use DateTimeInterface;
 use studioespresso\daterange\behaviors\EntryQueryBehavior;
 use studioespresso\daterange\fields\DateRangeField;
 use studioespresso\daterange\gql\arguments\EntriesArguments;
@@ -41,6 +43,36 @@ class DateRange extends Plugin
      * @var DateRange
      */
     public static $plugin;
+
+    // Static Methods
+    // =========================================================================
+
+    public static function toDateRange( string|array|DateTimeInterface|int $value ): array|null
+    {
+        $start = $value;
+        $end = $value;
+
+        if (is_string($value)) {
+            $value = preg_split('/\s?=>\s?/', $start);
+            $start = $value[0] ?? null;
+            $end = $value[1] ?? $start;
+        } else if (is_array($value)) {
+            $start = $value['start'] ?? null;
+            $end = $value['end'] ?? $start;
+        }
+
+        $start = DateTimeHelper::toDateTime($start);
+        $end = DateTimeHelper::toDateTime($end);
+
+        if (!$start || !$end || $end->getTimestamp() < $start->getTimestamp()) {
+            return null;
+        }
+
+        return [
+            'start' => $start,
+            'end' => $end,
+        ];
+    }
 
     // Public Properties
     // =========================================================================
