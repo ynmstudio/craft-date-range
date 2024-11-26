@@ -44,40 +44,48 @@ class EntryQueryBehavior extends Behavior
         ];
     }
 
-    public function isFuture($value, $entryTypeHandle, $includeToday = false)
+    public function isFuture($value, string|bool $entryTypeHandle = null, bool $includeToday = false)
     {
-        $this->handle = is_array($value) ? $value[0] : $value;
-        $this->includeToday = is_array($value) ? $value[1] : $includeToday;
+        $value = $this->parseArgumentValue($value, $entryTypeHandle, $includeToday);
+
+        $this->handle = $value['handle'];
         $this->isFuture = true;
-        $this->entryTypeHandle = $entryTypeHandle;
+        $this->entryTypeHandle = $value['entryTypeHandle'];
+        $this->includeToday = $value['includeToday'];
 
         return $this->owner;
     }
 
-    public function isPast($value, $entryTypeHandle, $includeToday = false)
+    public function isPast($value, string|bool $entryTypeHandle = null, $includeToday = false)
     {
-        $this->handle = is_array($value) ? $value[0] : $value;
-        $this->includeToday = is_array($value) ? $value[1] : $includeToday;
+        $value = $this->parseArgumentValue($value, $entryTypeHandle, $includeToday);
+
+        $this->handle = $value['handle'];
         $this->isPast = true;
-        $this->entryTypeHandle = $entryTypeHandle;
+        $this->entryTypeHandle = $value['entryTypeHandle'];
+        $this->includeToday = $value['includeToday'];
         return $this->owner;
     }
 
-    public function isNotPast($value, $entryTypeHandle, $includeToday = false)
+    public function isNotPast($value, string|bool $entryTypeHandle = null, $includeToday = false)
     {
-        $this->handle = is_array($value) ? $value[0] : $value;
-        $this->includeToday = is_array($value) ? $value[1] : $includeToday;
+        $value = $this->parseArgumentValue($value, $entryTypeHandle, $includeToday);
+
+        $this->handle = $value['handle'];
         $this->isNotPast = true;
-        $this->entryTypeHandle = $entryTypeHandle;
+        $this->entryTypeHandle = $value['entryTypeHandle'];
+        $this->includeToday = $value['includeToday'];
         return $this->owner;
     }
 
-    public function isOnGoing($value, $entryTypeHandle, $includeToday = false)
+    public function isOnGoing($value, string|bool $entryTypeHandle = null, $includeToday = false)
     {
-        $this->handle = is_array($value) ? $value[0] : $value;
-        $this->includeToday = is_array($value) ? $value[1] : $includeToday;
+        $value = $this->parseArgumentValue($value, $entryTypeHandle, $includeToday);
+
+        $this->handle = $value['handle'];
         $this->isOnGoing = true;
-        $this->entryTypeHandle = $entryTypeHandle;
+        $this->entryTypeHandle = $value['entryTypeHandle'];
+        $this->includeToday = $value['includeToday'];
         return $this->owner;
     }
 
@@ -87,7 +95,8 @@ class EntryQueryBehavior extends Behavior
             throw new InvalidConfigException("entryType not specified, see the Craft 5 upgrade guide on the changes required.");
         }
 
-        if ($this->handle && $this->entryTypeHandle) {
+        if ($this->handle && $this->entryTypeHandle)
+        {
             $type = Craft::$app->getEntries()->getEntryTypeByHandle($this->entryTypeHandle);
             if (!$type) {
                 throw new InvalidConfigException("Invalid entryType specified");
@@ -97,7 +106,9 @@ class EntryQueryBehavior extends Behavior
         }
 
         if (Craft::$app->db->getIsPgsql()) {
-            if ($this->field && $this->isFuture) {
+            /** @var \craft\base\FieldInterface|null $field */
+            $field = $this->field;
+            if ($field && $this->isFuture) {
                 $this->owner->subQuery
                     ->andWhere(Db::parseDateParam(
                         '"field_' . $this->handle . $this->columnSuffix . '"::json->>\'start\'',
@@ -105,7 +116,8 @@ class EntryQueryBehavior extends Behavior
                         $this->includeToday ? '>=' : '>'
                     ));
             }
-            if ($this->field && $this->isPast) {
+
+            if ($field && $this->isPast) {
                 $this->owner->subQuery
                     ->andWhere(Db::parseDateParam(
                         '"field_' . $this->handle . $this->columnSuffix . '"::json->>\'end\'',
@@ -114,7 +126,7 @@ class EntryQueryBehavior extends Behavior
                     ));
             }
 
-            if ($this->field && $this->isNotPast) {
+            if ($field && $this->isNotPast) {
                 $this->owner->subQuery
                     ->andWhere(Db::parseDateParam(
                         '"field_' . $this->handle . $this->columnSuffix . '"::json->>\'end\'',
@@ -123,7 +135,7 @@ class EntryQueryBehavior extends Behavior
                     ));
             }
 
-            if ($this->field && $this->isOnGoing) {
+            if ($field && $this->isOnGoing) {
                 $this->owner->subQuery
                     ->andWhere(Db::parseDateParam(
                         '"field_' . $this->handle . $this->columnSuffix . '"::json->>\'start\'',
@@ -137,48 +149,81 @@ class EntryQueryBehavior extends Behavior
                         $this->includeToday ? '>=' : '>'
                     ));
             }
-        } elseif (Craft::$app->db->getIsMysql()) {
-            if ($this->field && $this->isFuture) {
+        }
+
+        elseif (Craft::$app->db->getIsMysql())
+        {
+            /** @var \craft\base\FieldInterface|null $field */
+            $field = $this->field;
+            if ($field && $this->isFuture) {
                 $this->owner->subQuery
                     ->andWhere(Db::parseDateParam(
-                        $this->field->getValueSql('start'),
+                        $field->getValueSql('start'),
                         date('Y-m-d'),
                         $this->includeToday ? '>=' : '>'
                     ));
             }
 
-            if ($this->field && $this->isPast) {
+            if ($field && $this->isPast) {
                 $this->owner->subQuery
                     ->andWhere(Db::parseDateParam(
-                        $this->field->getValueSql('end'),
+                        $field->getValueSql('end'),
                         date('Y-m-d'),
                         $this->includeToday ? '<=' : '<'
                     ));
             }
 
-            if ($this->field && $this->isNotPast) {
+            if ($field && $this->isNotPast) {
                 $this->owner->subQuery
                     ->andWhere(Db::parseDateParam(
-                        $this->field->getValueSql('end'),
+                        $field->getValueSql('end'),
                         date('Y-m-d'),
                         $this->includeToday ? '>=' : '>'
                     ));
             }
 
-            if ($this->field && $this->isOnGoing) {
+            if ($field && $this->isOnGoing) {
                 $this->owner->subQuery
                     ->andWhere(Db::parseDateParam(
-                        $this->field->getValueSql('start'),
+                        $field->getValueSql('start'),
                         date('Y-m-d'),
                         $this->includeToday ? '<=' : '<'
                     ));
                 $this->owner->subQuery
                     ->andWhere(Db::parseDateParam(
-                        $this->field->getValueSql('end'),
+                        $field->getValueSql('end'),
                         date('Y-m-d'),
                         $this->includeToday ? '>=' : '>'
                     ));
             }
         }
     }
+
+    protected function parseArgumentValue(
+        string|array $value,
+        string|bool $entryTypeHandle = null,
+        $includeToday = false
+    ): array
+    {
+        $handle = null;
+
+        if (is_array($value)) {
+            $handle = $value[0] ?? null;
+            $arg2 = $value[1]  ?? null;
+            if (is_string($arg2)) {
+                $entryTypeHandle = $arg2;
+            } else if ($arg2 !== null) {
+                $includeToday = $arg2;
+            }
+        } else {
+            $handle = $value;
+        }
+
+        return [
+            'handle' => $handle,
+            'entryTypeHandle' => $entryTypeHandle,
+            'includeToday' => $includeToday,
+        ];
+    }
+
 }
