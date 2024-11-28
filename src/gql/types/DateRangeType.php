@@ -44,8 +44,10 @@ class DateRangeType extends ObjectType
                 break;
 
             case 'isOnGoing':
-                return $source->isOnGoing;
+            case 'isOngoing':
+                return $source->isOngoing;
                 break;
+
             default:
                 return $source->$fieldName;
                 break;
