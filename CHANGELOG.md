@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](http://keepachangelog.com/) and this project adheres to [Semantic Versioning](http://semver.org/).
 
+## 5.0.0-beta.3 - 2024-11-28
+### Fixed
+- GraphQL queries now work with Craft 5 ([#39](https://github.com/studioespresso/craft-date-range/pull/39))
+
 ## 5.0.0-beta.2 - 2024-04-29
 ### Fixed
 - Fixed an issue where the plugin would only install on 8.2.0 specifically ([#36](https://github.com/studioespresso/craft-date-range/issues/36))
