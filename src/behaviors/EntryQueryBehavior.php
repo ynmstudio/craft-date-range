@@ -95,8 +95,7 @@ class EntryQueryBehavior extends Behavior
             throw new InvalidConfigException("entryType not specified, see the Craft 5 upgrade guide on the changes required.");
         }
 
-        if ($this->handle && $this->entryTypeHandle)
-        {
+        if ($this->handle && $this->entryTypeHandle) {
             $type = Craft::$app->getEntries()->getEntryTypeByHandle($this->entryTypeHandle);
             if (!$type) {
                 throw new InvalidConfigException("Invalid entryType specified");
@@ -149,10 +148,7 @@ class EntryQueryBehavior extends Behavior
                         $this->includeToday ? '>=' : '>'
                     ));
             }
-        }
-
-        elseif (Craft::$app->db->getIsMysql())
-        {
+        } elseif (Craft::$app->db->getIsMysql()) {
             /** @var \craft\base\FieldInterface|null $field */
             $field = $this->field;
             if ($field && $this->isFuture) {
@@ -202,17 +198,16 @@ class EntryQueryBehavior extends Behavior
     protected function parseArgumentValue(
         string|array $value,
         string|bool $entryTypeHandle = null,
-        $includeToday = false
-    ): array
-    {
+        $includeToday = false,
+    ): array {
         $handle = null;
 
         if (is_array($value)) {
             $handle = $value[0] ?? null;
-            $arg2 = $value[1]  ?? null;
+            $arg2 = $value[1] ?? null;
             if (is_string($arg2)) {
                 $entryTypeHandle = $arg2;
-            } else if ($arg2 !== null) {
+            } elseif ($arg2 !== null) {
                 $includeToday = $arg2;
             }
         } else {
@@ -225,5 +220,4 @@ class EntryQueryBehavior extends Behavior
             'includeToday' => $includeToday,
         ];
     }
-
 }
