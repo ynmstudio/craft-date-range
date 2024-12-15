@@ -223,7 +223,7 @@ class EntryQueryBehavior extends Behavior
                     ));
             }
 
-            if ($field && $$this->startsAfterDate
+            if ($field && $this->startsAfterDate
                 && ($date = DateTimeHelper::toDateTime($this->startsAfterDate))
             ) {
                 $this->owner->subQuery
