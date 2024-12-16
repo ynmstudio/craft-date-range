@@ -110,7 +110,7 @@ class EntryQueryBehavior extends Behavior
             if ($field && $this->isFuture) {
                 $this->owner->subQuery
                     ->andWhere(Db::parseDateParam(
-                        '"field_' . $this->handle . $this->columnSuffix . '"::json->>\'start\'',
+                        $field->getValueSql('start'),
                         date('Y-m-d'),
                         $this->includeToday ? '>=' : '>'
                     ));
@@ -119,7 +119,7 @@ class EntryQueryBehavior extends Behavior
             if ($field && $this->isPast) {
                 $this->owner->subQuery
                     ->andWhere(Db::parseDateParam(
-                        '"field_' . $this->handle . $this->columnSuffix . '"::json->>\'end\'',
+                        $field->getValueSql('end'),
                         date('Y-m-d'),
                         $this->includeToday ? '<=' : '<'
                     ));
@@ -128,7 +128,7 @@ class EntryQueryBehavior extends Behavior
             if ($field && $this->isNotPast) {
                 $this->owner->subQuery
                     ->andWhere(Db::parseDateParam(
-                        '"field_' . $this->handle . $this->columnSuffix . '"::json->>\'end\'',
+                        $field->getValueSql('end'),
                         date('Y-m-d'),
                         $this->includeToday ? '>=' : '>'
                     ));
@@ -137,13 +137,13 @@ class EntryQueryBehavior extends Behavior
             if ($field && $this->isOnGoing) {
                 $this->owner->subQuery
                     ->andWhere(Db::parseDateParam(
-                        '"field_' . $this->handle . $this->columnSuffix . '"::json->>\'start\'',
+                        $field->getValueSql('start'),
                         date('Y-m-d'),
                         $this->includeToday ? '<=' : '<'
                     ));
                 $this->owner->subQuery
                     ->andWhere(Db::parseDateParam(
-                        '"field_' . $this->handle . $this->columnSuffix . '"::json->>\'end\'',
+                        $field->getValueSql('end'),
                         date('Y-m-d'),
                         $this->includeToday ? '>=' : '>'
                     ));
