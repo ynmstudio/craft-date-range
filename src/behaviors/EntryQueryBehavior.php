@@ -104,94 +104,48 @@ class EntryQueryBehavior extends Behavior
             $this->field = $layout->getFieldByHandle($this->handle);
         }
 
-        if (Craft::$app->db->getIsPgsql()) {
-            /** @var \craft\base\FieldInterface|null $field */
-            $field = $this->field;
-            if ($field && $this->isFuture) {
-                $this->owner->subQuery
-                    ->andWhere(Db::parseDateParam(
-                        '"field_' . $this->handle . $this->columnSuffix . '"::json->>\'start\'',
-                        date('Y-m-d'),
-                        $this->includeToday ? '>=' : '>'
-                    ));
-            }
+        /** @var \craft\base\FieldInterface|null $field */
+        $field = $this->field;
+        if ($field && $this->isFuture) {
+            $this->owner->subQuery
+                ->andWhere(Db::parseDateParam(
+                    $field->getValueSql('start'),
+                    date('Y-m-d'),
+                    $this->includeToday ? '>=' : '>'
+                ));
+        }
 
-            if ($field && $this->isPast) {
-                $this->owner->subQuery
-                    ->andWhere(Db::parseDateParam(
-                        '"field_' . $this->handle . $this->columnSuffix . '"::json->>\'end\'',
-                        date('Y-m-d'),
-                        $this->includeToday ? '<=' : '<'
-                    ));
-            }
+        if ($field && $this->isPast) {
+            $this->owner->subQuery
+                ->andWhere(Db::parseDateParam(
+                    $field->getValueSql('end'),
+                    date('Y-m-d'),
+                    $this->includeToday ? '<=' : '<'
+                ));
+        }
 
-            if ($field && $this->isNotPast) {
-                $this->owner->subQuery
-                    ->andWhere(Db::parseDateParam(
-                        '"field_' . $this->handle . $this->columnSuffix . '"::json->>\'end\'',
-                        date('Y-m-d'),
-                        $this->includeToday ? '>=' : '>'
-                    ));
-            }
+        if ($field && $this->isNotPast) {
+            $this->owner->subQuery
+                ->andWhere(Db::parseDateParam(
+                    $field->getValueSql('end'),
+                    date('Y-m-d'),
+                    $this->includeToday ? '>=' : '>'
+                ));
+        }
 
-            if ($field && $this->isOnGoing) {
-                $this->owner->subQuery
-                    ->andWhere(Db::parseDateParam(
-                        '"field_' . $this->handle . $this->columnSuffix . '"::json->>\'start\'',
-                        date('Y-m-d'),
-                        $this->includeToday ? '<=' : '<'
-                    ));
-                $this->owner->subQuery
-                    ->andWhere(Db::parseDateParam(
-                        '"field_' . $this->handle . $this->columnSuffix . '"::json->>\'end\'',
-                        date('Y-m-d'),
-                        $this->includeToday ? '>=' : '>'
-                    ));
-            }
-        } elseif (Craft::$app->db->getIsMysql()) {
-            /** @var \craft\base\FieldInterface|null $field */
-            $field = $this->field;
-            if ($field && $this->isFuture) {
-                $this->owner->subQuery
-                    ->andWhere(Db::parseDateParam(
-                        $field->getValueSql('start'),
-                        date('Y-m-d'),
-                        $this->includeToday ? '>=' : '>'
-                    ));
-            }
-
-            if ($field && $this->isPast) {
-                $this->owner->subQuery
-                    ->andWhere(Db::parseDateParam(
-                        $field->getValueSql('end'),
-                        date('Y-m-d'),
-                        $this->includeToday ? '<=' : '<'
-                    ));
-            }
-
-            if ($field && $this->isNotPast) {
-                $this->owner->subQuery
-                    ->andWhere(Db::parseDateParam(
-                        $field->getValueSql('end'),
-                        date('Y-m-d'),
-                        $this->includeToday ? '>=' : '>'
-                    ));
-            }
-
-            if ($field && $this->isOnGoing) {
-                $this->owner->subQuery
-                    ->andWhere(Db::parseDateParam(
-                        $field->getValueSql('start'),
-                        date('Y-m-d'),
-                        $this->includeToday ? '<=' : '<'
-                    ));
-                $this->owner->subQuery
-                    ->andWhere(Db::parseDateParam(
-                        $field->getValueSql('end'),
-                        date('Y-m-d'),
-                        $this->includeToday ? '>=' : '>'
-                    ));
-            }
+        if ($field && $this->isOnGoing) {
+            $this->owner->subQuery
+                ->andWhere(Db::parseDateParam(
+                    $field->getValueSql('start'),
+                    date('Y-m-d'),
+                    $this->includeToday ? '<=' : '<'
+                ));
+            $this->owner->subQuery
+                ->andWhere(Db::parseDateParam(
+                    $field->getValueSql('end'),
+                    date('Y-m-d'),
+                    $this->includeToday ? '>=' : '>'
+                ));
         }
     }
 
