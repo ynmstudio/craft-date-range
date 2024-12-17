@@ -106,8 +106,7 @@ class EntryQueryBehavior extends Behavior
         string|array $value,
         string|DateTimeInterface|int $date = null,
         string|bool $entryTypeHandle = null
-    ): Component|null
-    {
+    ): Component|null {
         $value = $this->parseDateArgumentValue($value, $date, $entryTypeHandle);
 
         $this->handle = $value['handle'];
@@ -121,8 +120,7 @@ class EntryQueryBehavior extends Behavior
         string|array $value,
         string|DateTimeInterface|int $date = null,
         string|bool $entryTypeHandle = null
-    ): Component|null
-    {
+    ): Component|null {
         $value = $this->parseDateArgumentValue($value, $date, $entryTypeHandle);
 
         $this->handle = $value['handle'];
@@ -136,8 +134,7 @@ class EntryQueryBehavior extends Behavior
         string|array $value,
         string|DateTimeInterface|int $date = null,
         string|bool $entryTypeHandle = null
-    ): Component|null
-    {
+    ): Component|null {
         $value = $this->parseDateRangeArgumentValue($value, $date, $entryTypeHandle);
 
         $this->handle = $value['handle'];
@@ -151,8 +148,7 @@ class EntryQueryBehavior extends Behavior
         string|array $value,
         string|DateTimeInterface|int $date = null,
         string|bool $entryTypeHandle = null
-    ): Component|null
-    {
+    ): Component|null {
         $value = $this->parseDateRangeArgumentValue($value, $date, $entryTypeHandle);
 
         $this->handle = $value['handle'];
@@ -177,8 +173,7 @@ class EntryQueryBehavior extends Behavior
             $this->field = $layout->getFieldByHandle($this->handle);
         }
 
-        if (Craft::$app->db->getIsPgsql())
-        {
+        if (Craft::$app->db->getIsPgsql()) {
             /** @var \craft\base\FieldInterface|null $field */
             $field = $this->field;
             if ($field && $this->isFuture) {
@@ -223,66 +218,67 @@ class EntryQueryBehavior extends Behavior
                     ));
             }
 
-            if ($field && $this->startsAfterDate
+            if (
+                $field && $this->startsAfterDate
                 && ($date = DateTimeHelper::toDateTime($this->startsAfterDate))
             ) {
                 $this->owner->subQuery
                     ->andWhere(Db::parseDateParam(
-                        '"field_' . $this->handle . $this->columnSuffix . '"::json->>\'start\'',
+                        $field->getValueSql('start'),
                         $date->format('Y-m-d'),
                         '>'
                     ));
             }
 
-            if ($field && $this->endsBeforeDate
+            if (
+                $field && $this->endsBeforeDate
                 && ($date = DateTimeHelper::toDateTime($this->endsBeforeDate))
             ) {
                 $this->owner->subQuery
                     ->andWhere(Db::parseDateParam(
-                        '"field_' . $this->handle . $this->columnSuffix . '"::json->>\'end\'',
+                        $field->getValueSql('end'),
                         $date->format('Y-m-d'),
                         '<'
                     ));
             }
 
-            if ($field && $this->isDuringDate
+            if (
+                $field && $this->isDuringDate
                 && ($dateRange = DateRange::toDateRange($this->isDuringDate))
             ) {
                 $this->owner->subQuery
                     ->andWhere(Db::parseDateParam(
-                        '"field_' . $this->handle . $this->columnSuffix . '"::json->>\'start\'',
+                        $field->getValueSql('start'),
                         $dateRange['end']->format('Y-m-d'),
                         '<='
                     ))
                     ->andWhere(Db::parseDateParam(
-                        '"field_' . $this->handle . $this->columnSuffix . '"::json->>\'end\'',
+                        $field->getValueSql('end'),
                         $dateRange['start']->format('Y-m-d'),
                         '>='
                     ));
             }
 
-            if ($field && $this->isNotDuringDate
+            if (
+                $field && $this->isNotDuringDate
                 && ($dateRange = DateRange::toDateRange($this->isNotDuringDate))
             ) {
                 $this->owner->subQuery
                     ->andWhere([
                         'or',
                         Db::parseDateParam(
-                            '"field_' . $this->handle . $this->columnSuffix . '"::json->>\'start\'',
+                            $field->getValueSql('start'),
                             $dateRange['end']->format('Y-m-d'),
                             '>'
                         ),
                         Db::parseDateParam(
-                            '"field_' . $this->handle . $this->columnSuffix . '"::json->>\'end\'',
+                            $field->getValueSql('end'),
                             $dateRange['start']->format('Y-m-d'),
                             '<'
                         )
                     ]);
             }
-        }
-
-        elseif (Craft::$app->db->getIsMysql())
-        {
+        } elseif (Craft::$app->db->getIsMysql()) {
             /** @var \craft\base\FieldInterface|null $field */
             $field = $this->field;
             if ($field && $this->isFuture) {
@@ -327,7 +323,8 @@ class EntryQueryBehavior extends Behavior
                     ));
             }
 
-            if ($field && $this->startsAfterDate
+            if (
+                $field && $this->startsAfterDate
                 && ($date = DateTimeHelper::toDateTime($this->startsAfterDate))
             ) {
                 $this->owner->subQuery
@@ -338,8 +335,9 @@ class EntryQueryBehavior extends Behavior
                     ));
             }
 
-            if ($field && ($this->endsBeforeDate
-                && $date = DateTimeHelper::toDateTime($this->endsBeforeDate))
+            if (
+                $field && ($this->endsBeforeDate
+                    && $date = DateTimeHelper::toDateTime($this->endsBeforeDate))
             ) {
                 $this->owner->subQuery
                     ->andWhere(Db::parseDateParam(
@@ -349,7 +347,8 @@ class EntryQueryBehavior extends Behavior
                     ));
             }
 
-            if ($field && $this->isDuringDate
+            if (
+                $field && $this->isDuringDate
                 && ($dateRange = DateRange::toDateRange($this->isDuringDate))
             ) {
                 $this->owner->subQuery
@@ -365,7 +364,8 @@ class EntryQueryBehavior extends Behavior
                     ));
             }
 
-            if ($field && $this->isNotDuringDate
+            if (
+                $field && $this->isNotDuringDate
                 && ($dateRange = DateRange::toDateRange($this->isNotDuringDate))
             ) {
                 $this->owner->subQuery
@@ -416,8 +416,7 @@ class EntryQueryBehavior extends Behavior
         string|array|DateTimeInterface|int $value,
         string $handle = null,
         string $entryTypeHandle = null
-    ): array
-    {
+    ): array {
         $date = null;
 
         if (is_array($value)) {
@@ -439,12 +438,10 @@ class EntryQueryBehavior extends Behavior
         string|array|DateTimeInterface|int $value,
         string $handle = null,
         string $entryTypeHandle = null
-    ): array
-    {
+    ): array {
         $dateRange = null;
 
-        if (is_array($value) && ArrayHelper::isIndexed($value))
-        {
+        if (is_array($value) && ArrayHelper::isIndexed($value)) {
             $dateRange = DateRange::toDateRange($value[0] ?? null);
             $handle = $value[1] ?? null;
             $entryTypeHandle = $value[2] ?? null;
@@ -458,5 +455,4 @@ class EntryQueryBehavior extends Behavior
             'entryTypeHandle' => $entryTypeHandle,
         ];
     }
-
 }
